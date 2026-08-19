@@ -4,6 +4,7 @@ import '../models/server_config.dart';
 
 class VpnService {
   static FlutterV2ray? _instance;
+  static void Function(V2RayStatus status)? onStatusChanged;
   static final StreamController<V2RayStatus> _statusController =
       StreamController<V2RayStatus>.broadcast();
 
@@ -15,6 +16,7 @@ class VpnService {
     _instance = FlutterV2ray(
       onStatusChanged: (status) {
         currentStatus = status;
+        onStatusChanged?.call(status);
         _statusController.add(status);
       },
     );
@@ -48,8 +50,8 @@ class VpnService {
     await init();
     if (server.port == 1) return -1;
     try {
-      final delay = await _instance!.getConnectedV2rayServerDelay(
-        server.rawConfigJson,
+      final delay = await _instance!.getServerDelay(
+        config: server.rawConfigJson,
         url: 'https://www.google.com/gen_204',
       );
       return delay;

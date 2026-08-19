@@ -124,7 +124,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (_autoBest) {
       setState(() => _state = ConnState.connecting);
       await Future.wait(_servers.map((s) async {
-        s.pingMs = (await pingServer(s.address, s.port))?.toDouble();
+        s.pingMs = (await VpnService.getDelay(s))?.toDouble();
       }));
       _servers.sort((a, b) => (a.pingMs ?? 999999).compareTo(b.pingMs ?? 999999));
       target = _servers.first;
