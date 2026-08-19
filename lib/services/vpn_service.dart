@@ -1,29 +1,36 @@
-import 'dart:io';
+import 'dart:async';
 import 'package:flutter_v2ray/flutter_v2ray.dart';
 import '../models/server_config.dart';
 
-/// Thin wrapper around flutter_v2ray so the rest of the app never talks to
-/// the plugin directly. If the exact method names differ slightly from the
-/// version that gets pulled in by `flutter pub get` (the plugin's API has
-/// shifted between versions), this is the ONLY file that needs adjusting —
-/// check `flutter pub deps` / the example on pub.dev for your resolved
-/// version and fix the calls below.
 class VpnService {
   static FlutterV2ray? _instance;
-  static void Function(V2RayStatus status)? onStatusChanged;
+  static final StreamController<V2RayStatus> _statusController =
+      StreamController<V2RayStatus>.broadcast();
+
+  static Stream<V2RayStatus> get statusStream => _statusController.stream;
+  static V2RayStatus currentStatus = V2RayStatus();
 
   static Future<void> init() async {
+    if (_instance != null) return;
     _instance = FlutterV2ray(
-      onStatusChanged: (status) => onStatusChanged?.call(status),
+      onStatusChanged: (status) {
+        currentStatus = status;
+        _statusController.add(status);
+      },
     );
     await _instance!.initializeV2Ray();
   }
 
   static Future<bool> requestPermission() async {
+    await init();
     return await _instance!.requestPermission();
   }
 
   static Future<void> connect(ServerConfig server) async {
+    await init();
+    if (server.port == 1) return;
+    if (!await requestPermission()) return;
+
     await _instance!.startV2Ray(
       remark: server.name,
       config: server.rawConfigJson,
@@ -33,21 +40,21 @@ class VpnService {
   }
 
   static Future<void> disconnect() async {
+    if (_instance == null) return;
     await _instance!.stopV2Ray();
   }
-}
 
-/// Real TCP-level latency probe — unlike a browser (no raw sockets
-/// available), Dart on Android can open an actual socket, so this is a
-/// genuine measurement, not an approximation.
-Future<int?> pingServer(String address, int port, {Duration timeout = const Duration(seconds: 3)}) async {
-  final sw = Stopwatch()..start();
-  try {
-    final socket = await Socket.connect(address, port, timeout: timeout);
-    sw.stop();
-    socket.destroy();
-    return sw.elapsedMilliseconds;
-  } catch (_) {
-    return null;
+  static Future<int> getDelay(ServerConfig server) async {
+    await init();
+    if (server.port == 1) return -1;
+    try {
+      final delay = await _instance!.getConnectedV2rayServerDelay(
+        server.rawConfigJson,
+        url: 'https://www.google.com/gen_204',
+      );
+      return delay;
+    } catch (_) {
+      return -1;
+    }
   }
 }
