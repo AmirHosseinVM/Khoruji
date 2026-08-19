@@ -44,6 +44,12 @@ class VpnService {
   static Future<void> disconnect() async {
     if (_instance == null) return;
     await _instance!.stopV2Ray();
+    
+    // ریست کامل وضعیت UI پس از قطع اتصال
+    final resetStatus = V2RayStatus();
+    currentStatus = resetStatus;
+    onStatusChanged?.call(resetStatus);
+    _statusController.add(resetStatus);
   }
 
   static Future<int> getDelay(ServerConfig server) async {
