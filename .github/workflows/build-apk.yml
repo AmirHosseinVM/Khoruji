@@ -44,10 +44,12 @@ jobs:
           cp -f android_overrides/proguard-rules.pro android/app/proguard-rules.pro
           cp -f android_overrides/app_build.gradle android/app/build.gradle
 
-      - name: Decode signing key (only if configured in repo secrets)
-        if: ${{ secrets.ONESPEED_KEYSTORE_BASE64 != '' }}
+      - name: Decode signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ONESPEED_KEYSTORE_BASE64 }}
+        if: ${{ env.KEYSTORE_BASE64 != '' }}
         run: |
-          echo "${{ secrets.ONESPEED_KEYSTORE_BASE64 }}" | base64 -d > "$GITHUB_WORKSPACE/onespeed-release.jks"
+          echo "$KEYSTORE_BASE64" | base64 -d > "$GITHUB_WORKSPACE/onespeed-release.jks"
           echo "ONESPEED_KEYSTORE=$GITHUB_WORKSPACE/onespeed-release.jks" >> "$GITHUB_ENV"
           echo "ONESPEED_KEYSTORE_PASSWORD=${{ secrets.ONESPEED_KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
           echo "ONESPEED_KEY_ALIAS=${{ secrets.ONESPEED_KEY_ALIAS }}" >> "$GITHUB_ENV"
