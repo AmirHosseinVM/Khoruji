@@ -1,0 +1,63 @@
+name: Build OneSpeed APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Download Vazirmatn font
+        run: |
+          mkdir -p assets/fonts
+          base="https://github.com/rastikerdar/vazirmatn/raw/master/fonts/ttf"
+          for w in Regular Medium SemiBold Bold ExtraBold; do
+            curl -fL "$base/Vazirmatn-$w.ttf" -o "assets/fonts/Vazirmatn-$w.ttf"
+          done
+          ls -la assets/fonts
+
+      - name: Generate native Android project (only if missing)
+        run: |
+          if [ ! -d android ]; then
+            flutter create --platforms=android --org com.onespeed --project-name onespeed .
+          fi
+
+      - name: Apply OneSpeed overrides (icons, manifest, gradle, proguard)
+        run: |
+          cp -rf android_overrides/app/src/main/res/mipmap-* android/app/src/main/res/
+          cp -f android_overrides/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
+          mkdir -p android/app/src/main/res/xml
+          cp -f android_overrides/network_security_config.xml android/app/src/main/res/xml/
+          cp -f android_overrides/proguard-rules.pro android/app/proguard-rules.pro
+          cp -f android_overrides/app_build.gradle android/app/build.gradle
+
+      - name: Decode signing key (only if configured in repo secrets)
+        if: ${{ secrets.ONESPEED_KEYSTORE_BASE64 != '' }}
+        run: |
+          echo "${{ secrets.ONESPEED_KEYSTORE_BASE64 }}" | base64 -d > "$GITHUB_WORKSPACE/onespeed-release.jks"
+          echo "ONESPEED_KEYSTORE=$GITHUB_WORKSPACE/onespeed-release.jks" >> "$GITHUB_ENV"
+          echo "ONESPEED_KEYSTORE_PASSWORD=${{ secrets.ONESPEED_KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
+          echo "ONESPEED_KEY_ALIAS=${{ secrets.ONESPEED_KEY_ALIAS }}" >> "$GITHUB_ENV"
+          echo "ONESPEED_KEY_PASSWORD=${{ secrets.ONESPEED_KEY_PASSWORD }}" >> "$GITHUB_ENV"
+
+      - run: flutter pub get
+
+      - run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: onespeed-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
