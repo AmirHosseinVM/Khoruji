@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e
 
-echo "🚀 در حال اعمال تغییرات کامل روی پروژه..."
+echo "🚀 در حال آپدیت فایل‌های پروژه و ارتقای GitHub Actions به نسخه v4..."
 
 mkdir -p lib/services lib/widgets .github/workflows
 
+# ۱. به‌روزرسانی vpn_service.dart
 cat << 'OUTER' > lib/services/vpn_service.dart
 import 'dart:async';
 import 'package:flutter_v2ray/flutter_v2ray.dart';
@@ -68,6 +69,7 @@ class VpnService {
 }
 OUTER
 
+# ۲. به‌روزرسانی connect_button.dart
 cat << 'OUTER' > lib/widgets/connect_button.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -141,6 +143,7 @@ class _ConnectButtonState extends State<ConnectButton> {
 }
 OUTER
 
+# ۳. بازنویسی کامل فایل Workflow با نسخه‌های v4 (جلوگیری از خطای Deprecated)
 cat << 'OUTER' > .github/workflows/build.yml
 name: Build Android APK
 
@@ -155,10 +158,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
       - name: Set up Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
@@ -177,10 +181,10 @@ jobs:
         run: flutter build apk --release
 
       - name: Upload APK Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 OUTER
 
-echo "🎉 فایل‌ها با موفقیت ساخته شدند!"
+echo "🎉 فایل‌ها با موفقیت آپدیت شدند!"
