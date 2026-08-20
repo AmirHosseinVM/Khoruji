@@ -1,9 +1,22 @@
+<<<<<<< HEAD
+=======
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader -> localProperties.load(reader) }
+}
+
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode') ?: '1'
+def flutterVersionName = localProperties.getProperty('flutter.versionName') ?: '1.0.0'
+
+>>>>>>> ce5dae0 (OneSpeed v1)
 plugins {
     id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+<<<<<<< HEAD
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
 if (localPropertiesFile.exists()) {
@@ -43,19 +56,64 @@ android {
         applicationId "com.onespeed.onespeed"
         minSdk 21
         targetSdk 34
+=======
+android {
+    // matches the package flutter create generates with --org com.onespeed --project-name onespeed
+    namespace "com.onespeed.onespeed"
+    compileSdk flutter.compileSdkVersion
+    ndkVersion flutter.ndkVersion
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions { jvmTarget = '1.8' }
+
+    defaultConfig {
+        applicationId "com.onespeed.onespeed"
+        minSdkVersion 24
+        targetSdkVersion 34
+>>>>>>> ce5dae0 (OneSpeed v1)
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
 
+<<<<<<< HEAD
     buildTypes {
         release {
             signingConfig signingConfigs.debug
             minifyEnabled true
+=======
+    signingConfigs {
+        release {
+            def hasKeystore = System.getenv("ONESPEED_KEYSTORE") != null
+            storeFile hasKeystore ? file(System.getenv("ONESPEED_KEYSTORE")) : null
+            storePassword System.getenv("ONESPEED_KEYSTORE_PASSWORD")
+            keyAlias System.getenv("ONESPEED_KEY_ALIAS") ?: "onespeed"
+            keyPassword System.getenv("ONESPEED_KEY_PASSWORD")
+        }
+    }
+
+    buildTypes {
+        release {
+            // No keystore yet? Falls back to the debug key automatically so
+            // you can still get an installable APK today. Set the
+            // ONESPEED_KEYSTORE* secrets later for a properly-signed build.
+            signingConfig System.getenv("ONESPEED_KEYSTORE") ? signingConfigs.release : signingConfigs.debug
+            minifyEnabled true
+            shrinkResources true
+>>>>>>> ce5dae0 (OneSpeed v1)
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
 
+<<<<<<< HEAD
 flutter {
     source '../..'
 }
+=======
+flutter { source '../..' }
+
+dependencies {}
+>>>>>>> ce5dae0 (OneSpeed v1)

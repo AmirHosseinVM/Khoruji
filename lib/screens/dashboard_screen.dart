@@ -58,11 +58,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (!mounted) return;
     setState(() {
       _status = status;
+<<<<<<< HEAD
       final s = status.state.toUpperCase();
       if (s.contains('CONNECTED')) {
         _state = ConnState.connected;
         _fetchExitIp();
       } else if (s.contains('CONNECTING')) {
+=======
+      // IMPORTANT: exact match only. "DISCONNECTED".contains("CONNECTED")
+      // is true (it literally ends in "...CONNECTED"), so a substring check
+      // here previously misread every disconnect as still-connected.
+      final s = status.state.toUpperCase().trim();
+      if (s == 'CONNECTED') {
+        _state = ConnState.connected;
+        _fetchExitIp();
+      } else if (s == 'CONNECTING') {
+>>>>>>> ce5dae0 (OneSpeed v1)
         _state = ConnState.connecting;
       } else {
         _state = ConnState.idle;
@@ -111,12 +122,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _onConnectTap() async {
     if (_state != ConnState.idle) {
+<<<<<<< HEAD
       await VpnService.disconnect();
       setState(() { _state = ConnState.idle; _ip = null; });
+=======
+      setState(() => _state = ConnState.connecting); // immediate feedback
+      try {
+        await VpnService.disconnect();
+      } finally {
+        // Always reset regardless of what the plugin does — the status
+        // stream will correct this if it disagrees, but the button must
+        // never be left stuck on a failed/slow disconnect call.
+        if (mounted) setState(() { _state = ConnState.idle; _ip = null; });
+      }
+>>>>>>> ce5dae0 (OneSpeed v1)
       return;
     }
     if (_servers.isEmpty) return;
 
+<<<<<<< HEAD
     final granted = await VpnService.requestPermission();
     if (!granted) return;
 
@@ -134,6 +158,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     setState(() { _connectedServer = target; _state = ConnState.connecting; });
     await VpnService.connect(target);
+=======
+    try {
+      final granted = await VpnService.requestPermission();
+      if (!granted) return;
+
+      ServerConfig target;
+      if (_autoBest) {
+        setState(() => _state = ConnState.connecting);
+        await Future.wait(_servers.map((s) async {
+          s.pingMs = (await VpnService.getServerDelay(s))?.toDouble();
+        }));
+        _servers.sort((a, b) => (a.pingMs ?? 999999).compareTo(b.pingMs ?? 999999));
+        target = _servers.first;
+      } else {
+        target = _selected ?? _servers.first;
+      }
+
+      setState(() { _connectedServer = target; _state = ConnState.connecting; });
+      await VpnService.connect(target);
+      // _onVpnStatus will move state to `connected` once the core confirms —
+      // if that never arrives (bad config etc.) the user can tap again to
+      // reset, so give it a timeout-based safety net too:
+      Future.delayed(const Duration(seconds: 15), () {
+        if (mounted && _state == ConnState.connecting) {
+          setState(() => _state = ConnState.idle); // connect attempt timed out
+        }
+      });
+    } catch (_) {
+      if (mounted) setState(() => _state = ConnState.idle);
+    }
+>>>>>>> ce5dae0 (OneSpeed v1)
   }
 
   Future<void> _openLocationSheet() async {
@@ -142,6 +197,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       servers: _servers,
       currentAutoBest: _autoBest,
       currentSelected: _selected,
+<<<<<<< HEAD
+=======
+      onPingRequest: (s) => VpnService.getServerDelay(s),
+>>>>>>> ce5dae0 (OneSpeed v1)
     );
     if (result == null) return;
     setState(() {
