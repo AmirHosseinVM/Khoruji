@@ -13,7 +13,7 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   uuid: ^4.4.0
 <<<<<<< HEAD
-  flutter_v2ray: ^1.0.10
+    flutter_v2ray: ^1.0.10
 =======
   flutter_v2ray: ^1.2.13
 >>>>>>> ce5dae0 (OneSpeed v1)
