@@ -29,10 +29,7 @@ Future<LocationSheetResult?> showLocationSheet(
   required List<ServerConfig> servers,
   required bool currentAutoBest,
   required ServerConfig? currentSelected,
-<<<<<<< HEAD
-=======
   required Future<int?> Function(ServerConfig) onPingRequest,
->>>>>>> ce5dae0 (OneSpeed v1)
 }) {
   return showModalBottomSheet<LocationSheetResult>(
     context: context,
@@ -120,9 +117,6 @@ Future<LocationSheetResult?> showLocationSheet(
                             Expanded(
                               child: Text(s.name, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
                             ),
-<<<<<<< HEAD
-                            _PingBadge(server: s),
-=======
                             GestureDetector(
                               onTap: () async {
                                 if (s.pinging) return;
@@ -133,7 +127,6 @@ Future<LocationSheetResult?> showLocationSheet(
                               },
                               child: _PingBadge(server: s),
                             ),
->>>>>>> ce5dae0 (OneSpeed v1)
                           ],
                         ),
                       ),
@@ -171,15 +164,12 @@ class _PingBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
-=======
     if (server.pinging) {
       return const SizedBox(
         width: 14, height: 14,
         child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.blue),
       );
     }
->>>>>>> ce5dae0 (OneSpeed v1)
     final ms = server.pingMs;
     String text;
     Color color;

@@ -2,75 +2,202 @@ name: Build OneSpeed APK
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch: {}
+    branches:
+      - main
+
+  workflow_dispatch:
 
 jobs:
   build:
+    name: Build Android APK
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+    steps:
+
+      # ---------------------------------------------
+      # Checkout
+      # ---------------------------------------------
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------
+      # Java 17
+      # ---------------------------------------------
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
 
-      - uses: subosito/flutter-action@v2
+      # ---------------------------------------------
+      # Flutter
+      # ---------------------------------------------
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
+          cache: true
 
-      - name: Download Vazirmatn font
-        run: |
-          mkdir -p assets/fonts
-          base="https://github.com/rastikerdar/vazirmatn/raw/master/fonts/ttf"
-          for w in Regular Medium SemiBold Bold ExtraBold; do
-            curl -fL "$base/Vazirmatn-$w.ttf" -o "assets/fonts/Vazirmatn-$w.ttf"
-          done
-          ls -la assets/fonts
+      # ---------------------------------------------
+      # Verify Flutter
+      # ---------------------------------------------
 
-      - name: Generate native Android project (only if missing)
+      - name: Flutter version
         run: |
-          if [ ! -d android ]; then
-            flutter create --platforms=android --org com.onespeed --project-name onespeed .
+          flutter --version
+          dart --version
+
+      # ---------------------------------------------
+      # Generate Android project
+      # ---------------------------------------------
+
+      - name: Generate Android project
+        run: |
+          if [ ! -d "android" ]; then
+            flutter create \
+              --platforms=android \
+              --org com.onespeed \
+              --project-name onespeed \
+              .
           fi
 
-      - name: Apply OneSpeed overrides (icons, manifest, gradle, proguard)
+          test -d android
+          echo "Android project ready."
+
+      # ---------------------------------------------
+      # Download fonts
+      # ---------------------------------------------
+
+      - name: Download Vazirmatn fonts
         run: |
-          cp -rf android_overrides/app/src/main/res/mipmap-* android/app/src/main/res/
-<<<<<<< HEAD
-=======
-          cp -rf android_overrides/app/src/main/res/drawable-* android/app/src/main/res/
->>>>>>> ce5dae0 (OneSpeed v1)
-          cp -f android_overrides/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
+          mkdir -p assets/fonts
+
+          BASE="https://github.com/rastikerdar/vazirmatn/raw/master/fonts/ttf"
+
+          for WEIGHT in Regular Medium SemiBold Bold ExtraBold; do
+            curl -fL \
+              "$BASE/Vazirmatn-$WEIGHT.ttf" \
+              -o "assets/fonts/Vazirmatn-$WEIGHT.ttf"
+          done
+
+          ls -lh assets/fonts
+
+      # ---------------------------------------------
+      # Apply icons
+      # ---------------------------------------------
+
+      - name: Apply OneSpeed icons
+        run: |
+          if [ -d "android_overrides/app/src/main/res" ]; then
+            cp -rf \
+              android_overrides/app/src/main/res/. \
+              android/app/src/main/res/
+          fi
+
+      # ---------------------------------------------
+      # Apply Manifest
+      # ---------------------------------------------
+
+      - name: Apply AndroidManifest
+        run: |
+          cp \
+            android_overrides/AndroidManifest.xml \
+            android/app/src/main/AndroidManifest.xml
+
+      # ---------------------------------------------
+      # Network security
+      # ---------------------------------------------
+
+      - name: Apply network security config
+        run: |
           mkdir -p android/app/src/main/res/xml
-          cp -f android_overrides/network_security_config.xml android/app/src/main/res/xml/
-          cp -f android_overrides/proguard-rules.pro android/app/proguard-rules.pro
-          cp -f android_overrides/app_build.gradle android/app/build.gradle
 
-<<<<<<< HEAD
-      - name: Decode signing key
-        env:
-          KEYSTORE_BASE64: ${{ secrets.ONESPEED_KEYSTORE_BASE64 }}
-        if: ${{ env.KEYSTORE_BASE64 != '' }}
+          cp \
+            android_overrides/network_security_config.xml \
+            android/app/src/main/res/xml/network_security_config.xml
+
+      # ---------------------------------------------
+      # ProGuard
+      # ---------------------------------------------
+
+      - name: Apply ProGuard rules
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > "$GITHUB_WORKSPACE/onespeed-release.jks"
-=======
-      - name: Decode signing key (only if configured in repo secrets)
-        if: ${{ secrets.ONESPEED_KEYSTORE_BASE64 != '' }}
+          cp \
+            android_overrides/proguard-rules.pro \
+            android/app/proguard-rules.pro
+
+      # ---------------------------------------------
+      # Custom Gradle
+      # ---------------------------------------------
+
+      - name: Apply OneSpeed Gradle configuration
         run: |
-          echo "${{ secrets.ONESPEED_KEYSTORE_BASE64 }}" | base64 -d > "$GITHUB_WORKSPACE/onespeed-release.jks"
->>>>>>> ce5dae0 (OneSpeed v1)
-          echo "ONESPEED_KEYSTORE=$GITHUB_WORKSPACE/onespeed-release.jks" >> "$GITHUB_ENV"
-          echo "ONESPEED_KEYSTORE_PASSWORD=${{ secrets.ONESPEED_KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
-          echo "ONESPEED_KEY_ALIAS=${{ secrets.ONESPEED_KEY_ALIAS }}" >> "$GITHUB_ENV"
-          echo "ONESPEED_KEY_PASSWORD=${{ secrets.ONESPEED_KEY_PASSWORD }}" >> "$GITHUB_ENV"
+          cp \
+            android_overrides/app_build.gradle \
+            android/app/build.gradle
 
-      - run: flutter pub get
+      # ---------------------------------------------
+      # Check for unresolved conflicts
+      # ---------------------------------------------
 
-      - run: flutter build apk --release
+      - name: Check repository integrity
+        run: |
+          if grep -RniE \
+            '^[<][<][<][<][<][<][<]|^[=][=][=][=][=][=][=]|^[>][>][>][>][>][>][>]' \
+            . \
+            --exclude-dir=.git \
+            --exclude='*.lock'; then
 
-      - uses: actions/upload-artifact@v4
+            echo "ERROR: Git conflict markers detected."
+            exit 1
+          fi
+
+          echo "No conflict markers found."
+
+      # ---------------------------------------------
+      # Dependencies
+      # ---------------------------------------------
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      # ---------------------------------------------
+      # Analyze
+      # ---------------------------------------------
+
+      - name: Flutter analyze
+        run: flutter analyze
+        continue-on-error: true
+
+      # ---------------------------------------------
+      # Build release APK
+      # ---------------------------------------------
+
+      - name: Build release APK
+        run: |
+          flutter build apk --release
+
+      # ---------------------------------------------
+      # Verify APK
+      # ---------------------------------------------
+
+      - name: Verify APK
+        run: |
+          ls -lh build/app/outputs/flutter-apk/
+
+          test -f \
+            build/app/outputs/flutter-apk/app-release.apk
+
+      # ---------------------------------------------
+      # Upload APK
+      # ---------------------------------------------
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          name: onespeed-apk
+          name: OneSpeed-APK
           path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error

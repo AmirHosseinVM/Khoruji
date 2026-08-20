@@ -67,10 +67,7 @@ mkdir -p assets/fonts assets/splash
 cp ~/onespeed_delivery/assets/splash/splash_logo.png assets/splash/
 # فونت‌ها رو دستی از fonts.google.com/specimen/Vazirmatn بگیرید و بریزید تو assets/fonts/
 cp -rf ~/onespeed_delivery/android_overrides/app/src/main/res/mipmap-* android/app/src/main/res/
-<<<<<<< HEAD
-=======
 cp -rf ~/onespeed_delivery/android_overrides/app/src/main/res/drawable-* android/app/src/main/res/
->>>>>>> ce5dae0 (OneSpeed v1)
 cp -f ~/onespeed_delivery/android_overrides/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
 mkdir -p android/app/src/main/res/xml
 cp -f ~/onespeed_delivery/android_overrides/network_security_config.xml android/app/src/main/res/xml/
@@ -87,8 +84,6 @@ flutter build apk --release   # بدون کلید هم کار می‌کنه (deb
 
 ## نکات مهم
 
-<<<<<<< HEAD
-=======
 0. **این نسخه چند باگ جدی قبلی رو فیکس کرده:**
    - قطع نشدن اتصال: یه باگ در تشخیص وضعیت بود (`"DISCONNECTED".contains("CONNECTED")` که همیشه true بود!) — الان با تطبیق دقیق رشته درست شده، بعلاوه یه fallback timeout که اگه هسته جواب نده دکمه گیر نمی‌کنه
    - فرمت ساب: پنل بسته به توکن، گاهی JSON کامل و گاهی لیست ساده‌ی لینک (`vless://`, `ss://`) برمی‌گردونه — الان هر دو حالت پشتیبانی میشه
@@ -96,24 +91,14 @@ flutter build apk --release   # بدون کلید هم کار می‌کنه (deb
    - پینگ الان واقعیه: از طریق خود پروتکل به `https://www.google.com/gen_204` (نه فقط تست TCP خام) — هم موقع اتصال به «بهترین سرور» خودکار میره، هم با تپ روی هر سرور توی لیست دستی قابل تست‌کردنه
    - نوتیفیکیشن اتصال: اسم سرور (remark) و دکمه‌ی «قطع اتصال» رو پاس میده؛ آیکون نوتیف تک‌رنگ هم اضافه شده (`drawable-*/ic_notification.png`) — اگه پلاگین شما resource دیگه‌ای برای آیکون نوتیف می‌خواد (اسمش بین نسخه‌ها فرق داره)، توی مستندات پلاگین چک کنید
 
->>>>>>> ce5dae0 (OneSpeed v1)
 1. **`lib/services/api_service.dart`** → `gatewayBase` از قبل روی
    `https://devfull.sbs/app` تنظیمه (همونی که تست کردیم).
 2. **`lib/screens/dashboard_screen.dart`** → `telegramUrl` رو با کانال
    واقعی‌تون عوض کنید.
 3. **`lib/services/vpn_service.dart`** → اگه نسخه‌ی نصب‌شده‌ی
-<<<<<<< HEAD
-   `flutter_v2ray` اسم متدها فرق داشت، اولین جایی که چک کنید همینجاست.
-4. بک‌اند PHP (پوشه‌ی `backend-php/`) رو اگه هنوز آپلود نکردید، طبق راهنمای
-   قبلی روی هاستتون بذارید.
-5. اگه build توی GitHub Actions قرمز (fail) شد، روی همون run کلیک کنید،
-   لاگ رو باز کنید، و کل پیام خطا رو برام بفرستید — دقیق درستش می‌کنم.
-
-=======
    `flutter_v2ray` اسم متدها فرق داشت (مخصوصاً `notificationDisconnectButtonName`
    که ممکنه اسمش فرق کنه یا اصلاً نباشه)، اولین جایی که چک کنید همینجاست.
 4. بک‌اند PHP (پوشه‌ی `backend-php/`) رو اگه هنوز آپلود نکردید، طبق راهنمای
    قبلی روی هاستتون بذارید.
 5. اگه build توی GitHub Actions قرمز (fail) شد یا باز هم روی گوشی مشکلی
    دیدید، دقیقاً پیام خطا/رفتار رو برام بفرستید — خط‌به‌خط درستش می‌کنم.
->>>>>>> ce5dae0 (OneSpeed v1)
